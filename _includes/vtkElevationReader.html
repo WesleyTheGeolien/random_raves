@@ -1,0 +1,57 @@
+<html>
+<body>
+					<div id="renderwindow"></div>
+					<script type="text/javascript"
+						src="https://unpkg.com/@babel/polyfill@7.0.0/dist/polyfill.js"></script>
+					<script type="text/javascript" src="https://unpkg.com/vtk.js"></script>
+					<script type="text/javascript">
+						var renderWindow = vtk.Rendering.Core.vtkRenderWindow.newInstance();
+						var renderer = vtk.Rendering.Core.vtkRenderer.newInstance({ background: [0.1, 0.1, 0.1] });
+
+						// OpenGlRenderWindow
+						var openGlRenderWindow = vtk.Rendering.OpenGL.vtkRenderWindow.newInstance();
+						renderWindow.addView(openGlRenderWindow);
+
+						// Interactor
+						var interactor = vtk.Rendering.Core.vtkRenderWindowInteractor.newInstance();
+						interactor.setView(openGlRenderWindow);
+						interactor.initialize();
+
+						renderWindow.addRenderer(renderer);
+						var actor = vtk.Rendering.Core.vtkActor.newInstance();
+						var mapper = vtk.Rendering.Core.vtkMapper.newInstance();
+						actor.setMapper(mapper);
+
+						const reader = vtk.IO.Misc.vtkElevationReader.newInstance({
+							xSpacing: 0.01568,
+							ySpacing: 0.01568,
+							zScaling: 0.06666,
+						});
+						mapper.setInputConnection(reader.getOutputPort());
+
+						const img = new Image();
+						img.src = `https://raw.githubusercontent.com/Kitware/vtk-js/master/Data/elevation/dem.jpg`;
+
+						// Download elevation and render when ready
+						reader.setUrl(`https://raw.githubusercontent.com/Kitware/vtk-js/master/Data/elevation/dem.csv`).then(() => {
+							renderer.resetCamera();
+							renderWindow.render();
+						});
+
+						renderer.setLayer(0);
+						renderer.addActor(actor);
+						renderer.resetCamera();
+
+						const rootContainer = document.createElement('div');
+						rootContainer.style.margin = 'auto';
+						document.getElementById('renderwindow').appendChild(rootContainer);
+						openGlRenderWindow.setContainer(rootContainer);
+
+						openGlRenderWindow.setSize(700, 280);
+
+						interactor.bindEvents(rootContainer);
+						interactor.setInteractorStyle(vtk.Interaction.Style.vtkInteractorStyleTrackballCamera.newInstance());
+						renderWindow.render();
+					</script>
+</body>
+</html>
